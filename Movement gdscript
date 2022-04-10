@@ -1,0 +1,288 @@
+extends KinematicBody2D 
+
+export var returngravity = 20
+export var gravity = 20
+export var jumpforce = 450
+export var maxfallspeed = 400
+export var fallspeed = 400
+export var kickback = 80
+
+export var speed = 130 #use this to return normal 130
+export var maxspeed = 130 
+
+export var runspeed = 200
+export var returnrunspeed = 200#use this to return run200
+
+
+const acceleration = 15
+
+export var slopejump = 1
+
+var state_machine
+var motion = Vector2.ZERO
+
+export(int) var numberofjumpsvalue = 2
+var numberofjumps
+var canflip
+
+var isgrounded
+var isattacking
+var isrunning
+
+var canslide
+var canclimb
+
+var canslope
+
+var speedjump
+var dashspeed #saves the speed from ground
+
+
+var last_checkpoint: Area2D = null
+onready var checkpoint_tween: Tween = get_node("CheckpointTween")
+
+func _ready():
+	
+	numberofjumps = numberofjumpsvalue
+	state_machine = $AnimationTree.get("parameters/playback")
+
+	if Globals.from_level != null:
+		get_node("Player")
+
+
+############################################################################### CHARACTER FUNCTIONS
+
+func nextToSlope():
+	return nextToRightSlope() or nextToLeftSlope()
+func nextToRightSlope():
+	return $Right_ray.is_colliding()
+func nextToLeftSlope():
+	return $Left_ray.is_colliding()
+
+	
+func nextToWall():
+	return nextToRightWall() or nextToLeftWall()
+func nextToRightWall():
+	return $Right_ray2.is_colliding()
+func nextToLeftWall():
+	return $Left_ray2.is_colliding()
+
+func jump():
+	if canflip:
+		state_machine.travel("jump2")
+	else:
+		state_machine.travel("jump")
+		
+		
+func attack():
+	if Input.is_action_just_pressed("attack") and Input.is_action_pressed("up"):
+		state_machine.travel("attacktop")
+	else:
+		if Input.is_action_pressed("walk_right"): 
+			motion.x = -kickback
+			state_machine.travel("attackside")
+		elif Input.is_action_pressed("walk_left"):
+			motion.x = kickback
+			state_machine.travel("attackside")
+		else:
+			state_machine.travel("attackside")
+################################################################################# FUNCTIONS END!
+
+	
+						##################
+						#MOVEMENT RELATED#
+						##################
+						
+################################################################# FUNCTION PROCESS AND JUMP STARTS (maybe move jump?)
+func _process(delta):						
+	
+	if isgrounded:
+		numberofjumps = numberofjumpsvalue
+		
+	if	Input.is_action_just_pressed("jump") && numberofjumps > 0:
+		motion.y = -jumpforce
+		numberofjumps -= 1
+		jump()
+	elif Input.is_action_pressed("jump") && numberofjumps == 0 && isgrounded:
+		motion.y = -jumpforce
+		jump()
+#################################################################  PROCESS AND JUMP ENDS
+	
+	
+###############################################################PSYCHIC PROCESS STARTS
+func _physics_process(delta):
+	
+	motion = move_and_slide(motion, Vector2.UP)
+	motion.y += gravity + delta
+	if motion.y > maxfallspeed:
+		motion.y = maxfallspeed
+		
+	if Input.is_action_pressed("walk_right"): 
+		motion.x = min(motion.x+acceleration, maxspeed)
+	elif Input.is_action_pressed("walk_left"):
+		motion.x = max(motion.x-acceleration, -maxspeed)
+
+
+	if Input.is_action_pressed("dash"):
+		isrunning = true
+		maxspeed = runspeed
+		
+	if Input.is_action_just_released("dash"):
+		maxspeed = speed
+		runspeed = returnrunspeed
+		isrunning = false
+
+######################
+#GROUND MOVEMENT #######
+########################
+
+	if is_on_floor():
+		isgrounded = true
+		canflip = false
+		canslope = false
+		
+		
+#############################################################
+		if nextToSlope(): #Slowing down on uphills while running
+			canslope = true
+			if motion.y < -30:
+				runspeed = speed
+			else:
+				runspeed = returnrunspeed
+		else:
+			runspeed = returnrunspeed
+########################################################
+
+		
+####################################################### WALKING/RUNNING STARTS				
+		if Input.is_action_pressed("walk_right"):
+			motion.x = min(motion.x+acceleration, maxspeed)
+			if motion.x < -1:
+				state_machine.travel("turn")
+			else:
+				state_machine.travel("walk")
+				$Sprite.flip_h = true 
+				
+			if Input.is_action_pressed("dash") and Input.is_action_pressed("walk_right"):
+				if nextToLeftSlope():
+					print("left slope")
+					state_machine.travel("slope")
+					$Sprite.flip_h = true
+				else:
+					if motion.x < -10:
+						state_machine.travel("turn")					
+					else:
+						state_machine.travel("run")
+						$Sprite.flip_h = true
+
+		elif Input.is_action_pressed("walk_left"):				
+			motion.x = max(motion.x-acceleration, -maxspeed)
+			if motion.x > 1:
+				state_machine.travel("turn")
+			else:
+				state_machine.travel("walk")
+				$Sprite.flip_h = false
+				
+			if Input.is_action_pressed("dash") and Input.is_action_pressed("walk_left"):
+				if nextToRightSlope():
+					print("rightslope")
+					state_machine.travel("slope")
+					$Sprite.flip_h = false
+				else:
+					if motion.x > 10:
+						state_machine.travel("turn")
+					else:
+						state_machine.travel("run")
+						$Sprite.flip_h = false
+		
+		else:
+			motion.x = lerp(motion.x, 0, 0.4)
+			state_machine.travel("idle")
+####################################################### WALKING/RUNNING ENDS
+
+#########################
+###GROUND MOVEMENT ENDS##
+########################	
+		
+		
+###########################
+#### AIR MOVEMENT#
+###########################
+	else:										
+		isgrounded = false
+		canflip = true
+		if nextToWall():
+			canslide = true
+			canclimb = true
+			print("nexto to WAALL")
+
+		if Input.is_action_just_pressed("jump"):
+			state_machine.travel("jump2")
+					
+		if Input.is_action_just_pressed("jump"): 
+			maxfallspeed = maxfallspeed * 0.5
+		if Input.is_action_just_released("jump"):
+			maxfallspeed = fallspeed
+							
+						
+############################################## WALLSLIDE / WALLCLIMB / EDGECLIMB STARTS		
+
+		if nextToRightWall() and Input.is_action_pressed("walk_right"):
+			state_machine.travel("wallslide")
+			$Sprite.flip_h = true
+			if Input.is_action_pressed("up"):
+				gravity = 0
+				motion.y = -50
+				print("climb?")
+			else:
+				canslide = false
+				gravity = returngravity
+			
+							
+		elif nextToLeftWall() and Input.is_action_pressed("left_right"):
+				state_machine.travel("wallslide")
+				$Sprite.flip_h = false
+############################################## WALLSLIDE / WALLCLIMB / EDGECLIMB ENS
+					
+			
+############################################## FALLING / SLOWFALL STARTS
+		else:
+			canslide = false
+			if motion.y > 20 and motion.y < 155 and Input.is_action_pressed("jump"):
+					state_machine.travel("slowfall")
+			elif motion.y > 155:
+					state_machine.travel("fall")
+############################################## FALLING / SLOWFALL ENDS
+				
+#######################
+### AIR ENDS##
+#######################
+
+						#######################
+						#MOVEMENT RELATED ENDS#
+						######################
+
+
+
+#########################################ITEMS
+
+func _on_coins_body_entered(body):
+	Globals.coins += 1
+	#$AudioStreamPlayer2D.play()
+
+
+##########################################Checkpoints
+func go_to_checkpoint() -> void:
+	checkpoint_tween.interpolate_property(self, "position", position, last_checkpoint.position, 0.4, Tween.TRANS_EXPO, Tween.EASE_OUT)
+	checkpoint_tween.start()
+func _on_Falldeath_body_entered(body):
+	body.go_to_checkpoint()
+
+
+
+func _on_ToWorldmap_body_entered(body):
+	get_tree().change_scene("res://Toworldmap.tscn")
+
+func _on_ToWorldmapEnd_body_entered(body):
+	get_tree().change_scene("res://Toworldmap.tscn")
+
