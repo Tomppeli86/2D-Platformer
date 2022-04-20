@@ -285,4 +285,3 @@ func _on_ToWorldmap_body_entered(body):
 
 func _on_ToWorldmapEnd_body_entered(body):
 	get_tree().change_scene("res://Toworldmap.tscn")
-
