@@ -1,4 +1,6 @@
-2D platformer game made with a Godot & <strong>gdscript(python)</strong>.
+Some of the code solutions from a game made with
+Godot & <strong>gdscript(python)</strong>.
+
 
 ![forest](https://user-images.githubusercontent.com/99166139/164237981-2defd440-392d-4b0e-85ef-4608f9105f3d.jpg)
 
