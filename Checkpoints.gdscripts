@@ -1,0 +1,24 @@
+#Uses area 2d collision when kinematic body collides.
+
+extends Area2D
+
+
+var active: bool = false
+
+onready var animated_sprite: AnimatedSprite = get_node("AnimatedSprite")
+
+
+func _on_CheckPoint_player_entered(player: KinematicBody2D) -> void:
+	if not active:
+		if player.last_checkpoint != null:
+			player.last_checkpoint.desactivate()
+		player.last_checkpoint = self
+		animated_sprite.play("activate")
+		active = true
+			
+func desactivate() -> void:
+	animated_sprite.play("default")
+	active = false
+
+
+#Other part of the checkpoint is in the Character movement file.
