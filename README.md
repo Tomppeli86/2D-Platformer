@@ -1,6 +1,6 @@
-Some of the code solutions from a game I'm working with 
+Some of the code solutions from a game I'm working on. 
 
-made with a Godot Engine & <strong>gdscript(python)</strong>.
+Made with a Godot Engine & <strong>gdscript(python)</strong>.
 
 
 ![forest](https://user-images.githubusercontent.com/99166139/164237981-2defd440-392d-4b0e-85ef-4608f9105f3d.jpg)
