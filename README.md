@@ -1,4 +1,4 @@
-2D Platformer, done with Godot game engine & <strong>gdscript(python)</strong>.
+A 2D platformer game made with Godot & <strong>Gdscript(Python)</strong>.
 
 ![forest](https://user-images.githubusercontent.com/99166139/164237981-2defd440-392d-4b0e-85ef-4608f9105f3d.jpg)
 
