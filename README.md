@@ -1,4 +1,4 @@
-Some of the code solutions from a game made with
+Some of the code solutions from a game I made with
 
 a Godot Engine & <strong>gdscript(python)</strong>.
 
