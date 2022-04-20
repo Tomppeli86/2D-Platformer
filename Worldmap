@@ -1,0 +1,61 @@
+extends KinematicBody2D
+
+
+var movespeed = 200
+var state_machine
+
+func _ready():
+	state_machine = $AnimationTree.get("parameters/playback")
+
+func _physics_process(delta):
+	
+	var motion = Vector2()
+	
+	
+	if Input.is_action_pressed("up"):
+		motion.y -= 1
+		state_machine.travel("walkworld")
+		$Sprite.flip_h = true
+	
+	elif  Input.is_action_pressed("down"):
+		motion.y -= -1
+		state_machine.travel("walkdown")
+	
+	if Input.is_action_pressed("walk_left"):
+		motion.x -= 1
+		state_machine.travel("walkworld")
+		$Sprite.flip_h = true
+	
+	elif Input.is_action_pressed("walk_right"):
+		motion.x -= -1
+		state_machine.travel("walkworld")
+		$Sprite.flip_h = false
+		
+	else: 
+		state_machine.travel("idleworld")
+	
+	motion = motion.normalized()
+	motion = move_and_slide(motion * movespeed)
+
+
+
+func _on_ToForest_body_entered(_body):
+	get_tree().change_scene("res://Forest.tscn") #forest
+
+func _on_ToKuusi_body_entered(body):
+	get_tree().change_scene("res://Kuusi.tscn")
+
+func _on_ToCave_body_entered(body):
+	get_tree().change_scene("res://Cave.tscn")
+
+func _on_ToHouse_body_entered(body):
+	get_tree().change_scene("res://Froghouse.tscn")
+
+func _on_ToPilvi_body_entered(body):
+	get_tree().change_scene("res://Sky.tscn")
+
+func _on_ToRiver_body_entered(body):
+	get_tree().change_scene("res://River.tscn")
+
+func _on_ToSwamp_body_entered(body):
+	get_tree().change_scene("res://Swamp.tscn")
